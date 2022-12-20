@@ -30,6 +30,26 @@ test('counter increments and decrements when the buttons are clicked', () => {
   //
   // 🐨 cleanup by removing the div from the page (💰 div.remove())
   // 🦉 If you don't cleanup, then it could impact other tests and/or cause a memory leak
+
+
+  const divWrapper = document.createElement("div")
+  document.body.append(divWrapper)
+
+  const root = createRoot(divWrapper);
+  act(()=> root.render(<Counter></Counter>))
+  const [decrement, increment] = divWrapper.querySelectorAll("button")
+  const message = divWrapper.firstChild.querySelector("div");
+
+  expect(message).toHaveTextContent("Current count: 0")
+
+  act(() => increment.click())
+  expect(message).toHaveTextContent("Current count: 1")
+  act(() => decrement.click())
+  expect(message).toHaveTextContent("Current count: 0")
+
+  divWrapper.remove()
+  
+
 })
 
 /* eslint no-unused-vars:0 */

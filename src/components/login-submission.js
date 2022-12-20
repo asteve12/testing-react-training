@@ -34,7 +34,8 @@ function formSubmissionReducer(state, action) {
   }
 }
 
-function useFormSubmission({endpoint, data}) {
+function useFormSubmission({ endpoint, data }) {
+  
   const [state, dispatch] = React.useReducer(formSubmissionReducer, {
     status: 'idle',
     responseData: null,

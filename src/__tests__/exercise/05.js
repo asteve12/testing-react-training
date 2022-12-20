@@ -3,11 +3,13 @@
 
 import * as React from 'react'
 // 🐨 you'll need to grab waitForElementToBeRemoved from '@testing-library/react'
-import {render, screen} from '@testing-library/react'
+import {render, screen, waitForElementToBeRemoved} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {build, fake} from '@jackfranklin/test-data-bot'
 // 🐨 you'll need to import rest from 'msw' and setupServer from msw/node
 import Login from '../../components/login-submission'
+import { rest } from "msw"
+import { setupServer } from 'msw/lib/node'
 
 const buildLoginForm = build({
   fields: {
@@ -15,6 +17,43 @@ const buildLoginForm = build({
     password: fake(f => f.internet.password()),
   },
 })
+
+const delay = process.env.NODE_ENV === "test" ? 0 : 1500
+
+const server = setupServer(
+  rest.post("https://auth-provider.example.com/api/login", async (req, res, ctx) => {
+    if (!req.body.password) {
+      return res(
+        ctx.delay(delay),
+        ctx.status(400),
+        ctx.json({
+          message:"password"
+        })
+      )
+    }
+
+    if (!req.body.username) {
+      return res(
+        ctx.delay(delay),
+        ctx.status(400),
+        ctx.json({
+          message:"username required"
+        })
+      )
+    }
+    return res(
+      ctx.delay(delay),
+      ctx.json({
+        username:req.body.username
+        
+      })
+    )
+  })
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(()=> server.close())
 
 // 🐨 get the server setup with an async function to handle the login POST request:
 // 💰 here's something to get you started
@@ -34,6 +73,12 @@ test(`logging in displays the user's username`, async () => {
 
   await userEvent.type(screen.getByLabelText(/username/i), username)
   await userEvent.type(screen.getByLabelText(/password/i), password)
+
+  await userEvent.click(screen.getByRole("button"))
+
+  await waitForElementToBeRemoved(()=> screen.getByLabelText(/loading/i))
+  expect(screen.getByText(username)).toBeInTheDocument()
+
   // 🐨 uncomment this and you'll start making the request!
   // await userEvent.click(screen.getByRole('button', {name: /submit/i}))
 
@@ -45,4 +90,9 @@ test(`logging in displays the user's username`, async () => {
   // once the login is successful, then the loading spinner disappears and
   // we render the username.
   // 🐨 assert that the username is on the screen
+
+  
 })
+
+
+
